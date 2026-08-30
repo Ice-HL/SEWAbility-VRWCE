@@ -1,0 +1,12 @@
+numpy
+pandas
+scipy
+scikit-learn
+matplotlib
+opencv-python
+mediapipe
+Pillow
+openpyxl
+joblib
+
+# The work-cycle boundary workflow also calls ffprobe from FFmpeg.
