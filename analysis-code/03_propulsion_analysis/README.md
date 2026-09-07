@@ -33,7 +33,7 @@ Exactly one P2 row for each of the 210 retained cycles, with these columns:
 | `fps` or `FPS` | Source-video frame rate |
 
 The 220-to-210 quality-control decisions and the P1–P3 annotations are
-documented in Supplementary Table S20 and are treated as upstream inputs. This
+documented in Supplementary Table S19 and are treated as upstream inputs. This
 module does not recreate those review decisions from identifiable videos.
 
 ### Per-video trajectory CSVs
@@ -79,10 +79,15 @@ python summarize_propulsion_characteristics.py \
   end within the same cycle. It is not an onset-to-onset interval. For 4,916
   candidates nested in 210 cycles, this yields 4,706 adjacent-candidate pairs.
 - Wrist separation, duration, and path speed use pooled candidate-level
-  distributions, as specified in the manuscript table.
+  distributions, as specified in Table 1 of the main manuscript.
 - Multiplication by the 0.40-m reference shoulder width produces nominal
   reference-scaled design values; it does not recover metric distances from
   the top-down videos.
+
+Table 1 brings together the operational definitions, real-work reference
+values, and their VR uses. Workload and hand-guidance geometry inform the VR
+specification; duration, inter-event gap, and path speed remain comparison
+references and do not impose mandatory pacing.
 
 No local usernames, personal names, or machine-specific paths are embedded in
 the scripts.

@@ -13,7 +13,7 @@ cycles to 210 retained cycles. They are not regenerated from video by this
 release because the source videos contain identifiable participant images and
 the final adjudication depended on source-video review rather than a single
 automated script. The retained-cohort records are documented in Supplementary
-Table S20.
+Table S19.
 
 The code therefore requires two de-identified, machine-readable inputs:
 
@@ -61,6 +61,21 @@ where `{phase}` is `P1`, `P2`, or `P3`.
 
 For the manuscript analysis dataset, the primary eligible-cycle counts are
 P1 = 194, P2 = 210, and P3 = 181.
+
+## Connection to VR spatial mapping
+
+The outputs are shoulder-normalized, two-dimensional wrist-use densities and
+regions. Together with movement pathways and workstation context, they inform
+the global VR task-space organization; this is not metric 3D reconstruction.
+The P1 left-wrist 90% region provides the area reference for the tabletop
+placement-completion zone. The compact P2 distributions inform the
+needle-adjacent propulsion location, not the dimensions of the local hand
+guidance cues. The out-of-frame floor-level region is specified from on-site
+observation and factory consultation rather than from a wrist-density estimate.
+
+The corresponding spatial results and implemented global geometry are reported
+in Tables 2 and 3 of the main manuscript, respectively. Local propulsion
+parameters are described in Table 1 and in `03_propulsion_analysis`.
 
 ## Example
 
