@@ -1,6 +1,6 @@
-# Supplementary material index
+# Supplementary material
 
-The tables and figures below are listed in the numerical order used in the accompanying manuscript. Operational definitions, real-work reference values, and VR uses of propulsion characteristics are provided in Table 1 of the main manuscript.
+These supplementary files follow the table and figure numbering in the accompanying manuscript.
 
 ## Supplementary tables
 
