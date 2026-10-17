@@ -21,7 +21,8 @@ from scipy.ndimage import gaussian_filter
 PHASES = ("P1", "P2", "P3")
 HANDS = ("left", "right")
 CELL_SIZE_SW = 0.025
-BANDWIDTH_CANDIDATES_SW = (0.025, 0.04, 0.06, 0.08, 0.10, 0.12, 0.15, 0.18)
+BANDWIDTH_CANDIDATES_SW = tuple(round(i / 100, 2) for i in range(1, 31))
+HISTORICAL_GRID_MARGIN_SW = 4 * 0.18
 MIN_VALID_SAMPLES = 10
 MIN_PHASE_AVAILABILITY = 0.50
 
@@ -120,17 +121,30 @@ def primary_eligible_cycles(audit: pd.DataFrame) -> dict[str, pd.Index]:
 
 
 def make_edges(data: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
-    margin = 4 * max(BANDWIDTH_CANDIDATES_SW)
     x = data.x_from_needle_sw.to_numpy(float)
     y = data.y_from_needle_sw.to_numpy(float)
+    # Keep the historical bin edges, then pad in whole cells for the expanded
+    # bandwidth range. Rebuilding the grid from a larger margin can shift an
+    # observation on a bin boundary through floating-point rounding.
+    margin = HISTORICAL_GRID_MARGIN_SW
     xmin = np.floor((np.min(x) - margin) / CELL_SIZE_SW) * CELL_SIZE_SW
     xmax = np.ceil((np.max(x) + margin) / CELL_SIZE_SW) * CELL_SIZE_SW
     ymin = np.floor((np.min(y) - margin) / CELL_SIZE_SW) * CELL_SIZE_SW
     ymax = np.ceil((np.max(y) + margin) / CELL_SIZE_SW) * CELL_SIZE_SW
-    return (
+    edges = (
         np.arange(xmin, xmax + 0.5 * CELL_SIZE_SW, CELL_SIZE_SW),
         np.arange(ymin, ymax + 0.5 * CELL_SIZE_SW, CELL_SIZE_SW),
     )
+    pad = int(np.ceil(max(
+        0.0, 4 * max(BANDWIDTH_CANDIDATES_SW) - margin
+    ) / CELL_SIZE_SW))
+    if not pad:
+        return edges
+    return tuple(np.concatenate((
+        edge[0] - CELL_SIZE_SW * np.arange(pad, 0, -1),
+        edge,
+        edge[-1] + CELL_SIZE_SW * np.arange(1, pad + 1),
+    )) for edge in edges)
 
 
 def cycle_histograms(
@@ -211,45 +225,39 @@ def select_shared_bandwidth(
                     }
                 )
     scores = pd.DataFrame(rows)
-    aggregate = (
-        scores.groupby("bandwidth_sw", as_index=False)
-        .mean(numeric_only=True)[["bandwidth_sw", "mean_heldout_cycle_log_score"]]
-        .rename(
-            columns={
-                "mean_heldout_cycle_log_score": "equal_group_mean_log_score"
-            }
-        )
+    aggregate, selected = aggregate_bandwidth_scores(scores)
+    return selected, scores.merge(
+        aggregate, on="bandwidth_sw", how="left", validate="many_to_one"
     )
-    best_bandwidth = float(
-        aggregate.loc[aggregate.equal_group_mean_log_score.idxmax(), "bandwidth_sw"]
-    )
-    paired = scores.pivot(
-        index=["phase", "hand"],
-        columns="bandwidth_sw",
-        values="mean_heldout_cycle_log_score",
-    )
-    losses = paired[best_bandwidth].to_numpy()[:, None] - paired.to_numpy()
-    paired_loss = pd.DataFrame(
-        {
-            "bandwidth_sw": paired.columns.astype(float),
-            "paired_mean_loss_from_best": losses.mean(axis=0),
-            "paired_se_loss_from_best": losses.std(axis=0, ddof=1)
-            / np.sqrt(losses.shape[0]),
-        }
-    )
-    aggregate = aggregate.merge(paired_loss, on="bandwidth_sw", how="left")
-    # Same paired one-standard-error preference used in the reported analysis:
-    # choose the largest candidate whose loss from the best is no greater than
-    # the paired SE of that loss across the six phase-hand groups.
-    candidates = aggregate[
-        aggregate.paired_mean_loss_from_best
-        <= aggregate.paired_se_loss_from_best + 1e-12
-    ]
-    selected = float(candidates.bandwidth_sw.max())
-    scores["selected_shared_bandwidth"] = np.isclose(
-        scores.bandwidth_sw, selected
-    )
-    return selected, scores
+
+
+def aggregate_bandwidth_scores(scores: pd.DataFrame) -> tuple[pd.DataFrame, float]:
+    """Maximize the equal-six-group LOVO mean; exact ties choose the smallest.
+
+    Cycle-equal held-out scores are first averaged within each phase-hand group.
+    Those six group means then receive equal weight, regardless of group size.
+    No preferred winning bandwidth is fixed in advance.
+    """
+    expected = {(phase, hand) for phase in PHASES for hand in HANDS}
+    for bandwidth, group in scores.groupby("bandwidth_sw"):
+        if (len(group) != len(expected)
+                or set(zip(group.phase, group.hand)) != expected
+                or not np.isfinite(group.mean_heldout_cycle_log_score).all()):
+            raise ValueError(f"Invalid phase-hand LOVO scores at bandwidth {bandwidth}")
+    if set(scores.bandwidth_sw) != set(BANDWIDTH_CANDIDATES_SW):
+        raise ValueError("LOVO scores must cover every declared bandwidth candidate")
+    aggregate = scores.groupby("bandwidth_sw", as_index=False).agg(
+        equal_group_mean_loo_log_score=("mean_heldout_cycle_log_score", "mean")
+    ).sort_values("bandwidth_sw").reset_index(drop=True)
+    aggregate["score_rank"] = aggregate.equal_group_mean_loo_log_score.rank(
+        method="min", ascending=False
+    ).astype(int)
+    best_score = aggregate.equal_group_mean_loo_log_score.max()
+    selected = float(aggregate.loc[
+        aggregate.equal_group_mean_loo_log_score == best_score, "bandwidth_sw"
+    ].min())
+    aggregate["selected_shared_bandwidth"] = aggregate.bandwidth_sw == selected
+    return aggregate, selected
 
 
 def hdr_threshold(mass: np.ndarray, coverage: float) -> float:
@@ -406,6 +414,12 @@ def main() -> int:
         raise RuntimeError("At least one HDR does not attain its target coverage")
 
     cv.to_csv(output / "bandwidth_cross_validation.csv", index=False)
+    cv[[
+        "bandwidth_sw", "equal_group_mean_loo_log_score", "score_rank",
+        "selected_shared_bandwidth",
+    ]].drop_duplicates().sort_values("bandwidth_sw").to_csv(
+        output / "shared_bandwidth_selection_30_candidates.csv", index=False
+    )
     eligibility.to_csv(output / "primary_phase_eligibility.csv", index=False)
     primary.to_csv(output / "primary_hdr_summary.csv", index=False)
     sensitivity.to_csv(output / "all_nonempty_sensitivity_summary.csv", index=False)
@@ -415,6 +429,21 @@ def main() -> int:
         "primary_eligible_cycles": observed_primary,
         "cell_size_sw": CELL_SIZE_SW,
         "selected_shared_isotropic_bandwidth_sw": bandwidth,
+        "bandwidth_candidates_sw": BANDWIDTH_CANDIDATES_SW,
+        "bandwidth_selection": (
+            "Maximum mean leave-one-video-out log score over 30 candidates "
+            "from 0.01 to 0.30 SW in 0.01-SW steps, equally weighting the six "
+            "phase-hand group means; exact ties select the smallest tied bandwidth."
+        ),
+        "grid_shape": [len(x_centres), len(y_centres)],
+        "grid_extent_sw": [
+            float(x_edges[0]), float(x_edges[-1]),
+            float(y_edges[0]), float(y_edges[-1]),
+        ],
+        "grid_construction": (
+            "Historical 4 x 0.18 SW margin with whole-cell padding to at least "
+            "four times the largest bandwidth candidate."
+        ),
         "primary_rule": {
             "minimum_valid_samples_per_wrist": MIN_VALID_SAMPLES,
             "minimum_phase_availability_per_wrist": MIN_PHASE_AVAILABILITY,
@@ -439,3 +468,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

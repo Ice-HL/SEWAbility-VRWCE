@@ -54,13 +54,40 @@ where `{phase}` is `P1`, `P2`, or `P3`.
 - Grid-cell width: 0.025 SW.
 - Each phase–hand–cycle occupancy histogram is normalized to unit mass before
   aggregation.
-- A shared isotropic Gaussian bandwidth is selected by leave-one-video-out
-  scoring from the prespecified candidate set.
+- The shared isotropic Gaussian bandwidth is selected by leave-one-video-out
+  scoring over 30 candidates: 0.01–0.30 SW in 0.01-SW steps. Within each of the
+  six phase–hand groups, held-out cycles contribute equally to the mean log
+  score. The six group means then contribute equally to the shared score.
+- Select the candidate with the highest shared mean log score. If candidates
+  tie exactly, select the smallest bandwidth. There is no one-standard-error
+  preference in the current selector.
 - Primary 50% and 90% HDRs are accompanied by a sensitivity analysis that uses
   every non-empty phase–hand trajectory.
 
 For the manuscript analysis dataset, the primary eligible-cycle counts are
 P1 = 194, P2 = 210, and P3 = 181.
+
+## Bandwidth results and method history
+
+The manuscript dataset selects 0.04 SW. This is an observed result of the
+candidate search, not a bandwidth fixed in the code. Supplementary Table S19
+displays ten candidates from 0.01 to 0.10 SW. The numerical records in
+[`validation/`](validation/) contain all 30 candidates, the 0.11–0.30-SW
+extended-range check, and the corresponding area-sensitivity results.
+
+The candidate grid and selection rule are revisions to the earlier repository
+implementation at commit `0a6a9a901fb9c697491755ab59ccfa1add1d3191`, which used
+eight candidates (0.025, 0.04, 0.06, 0.08, 0.10, 0.12, 0.15, and 0.18 SW) and
+selected the largest candidate within a paired one-standard-error loss from
+the best mean score across the six phase–hand groups. That implementation
+remains archived in Git history; it is not the current analysis rule. This
+revision is documented for reproducibility and is not described as
+preregistered.
+
+The validation records compare both selectors on the same 30-candidate grid:
+the current maximum-score rule selects 0.04 SW, whereas the historical paired
+one-standard-error rule would select 0.05 SW. This separates the effect of the
+selection rule from the change in candidate grid.
 
 ## Connection to VR spatial mapping
 
@@ -87,3 +114,26 @@ python cycle_balanced_wrist_regions.py \
 ```
 
 No personal names or local computer paths are embedded in the script.
+
+## Outputs and verification boundary
+
+The output directory contains `bandwidth_cross_validation.csv`,
+`shared_bandwidth_selection_30_candidates.csv`,
+`primary_phase_eligibility.csv`, `primary_hdr_summary.csv`,
+`all_nonempty_sensitivity_summary.csv`, `primary_density_grid.csv`, and
+`analysis_manifest.json`. The manifest records the selected bandwidth and
+analysis rules. The cross-validation export contains 180 leave-one-video-out
+candidate–group rows (30 candidates × six phase–hand groups), with aggregate
+score/rank fields; the shared-selection export contains one row per candidate.
+The script checks retained-cycle and primary-eligibility
+counts, density normalization, and achieved HDR coverage.
+
+The released [validation records](validation/) document the manuscript-data
+bandwidth analysis. The reference cross-validation file also retains
+leave-one-cycle-out diagnostic rows; those diagnostics do not enter the
+primary leave-one-video-out selector and are not additional CLI outputs.
+The records are aggregate numerical evidence, not substitutes
+for the trajectory and cycle-audit inputs required to rerun the full spatial
+analysis. Reproducing the 220-to-210 source-video adjudication remains outside
+the scope of this public script.
+

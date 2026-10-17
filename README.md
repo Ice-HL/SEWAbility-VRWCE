@@ -18,7 +18,7 @@ The study links real-work evidence and assessment guidance to VR task specificat
 
 Spatial mapping preserves functional relationships rather than reconstructing metrically calibrated three-dimensional geometry from video. The floor-level region also requires on-site and factory context because it is outside the video field of view. Global task sites and local hand-guidance cues are specified separately.
 
-The prototype was examined in four preliminary technical sessions: two program-generated and two researcher-operated. These sessions demonstrated task execution, structured recording, and indicator derivation; they do not establish clinical validity or work-capacity thresholds.
+The prototype was examined in four preliminary technical sessions: two program-generated and two researcher-operated. These sessions demonstrated task execution, structured recording, and indicator derivation. This is a technical proof of concept; it does not establish reliability, validity, clinical utility, health benefits, safety performance, or work-capacity decision thresholds.
 
 ## Repository structure
 
@@ -46,6 +46,12 @@ python -m pip install -r analysis-code/requirements.txt
 
 Each module contains its own README describing its inputs, outputs, execution order, assumptions, and interpretation boundary.
 
+### Spatial-method revision and validation records
+
+The current spatial analysis evaluates 30 shared isotropic bandwidth candidates from 0.01 to 0.30 shoulder-width units (SW), in 0.01-SW steps. It selects the highest leave-one-video-out mean log score, weighting the six phase–hand groups equally; an exact tie is resolved by the smallest bandwidth. The selected 0.04 SW is a result of this procedure, not a fixed input. Supplementary Table S19 displays the ten candidates from 0.01 to 0.10 SW; the [spatial validation records](analysis-code/02_spatial_analysis/validation/) retain the full search and the extended-range check.
+
+Both the candidate grid and the selection rule have been revised from the earlier repository implementation, which used eight candidates and a paired one-standard-error preference. The earlier implementation remains in Git history. The [spatial README](analysis-code/02_spatial_analysis/README.md) and validation records explain the change; it is not presented as a preregistered procedure.
+
 ## Input formats
 
 The scripts operate on de-identified numerical records rather than worker names. Required input classes include:
@@ -67,3 +73,5 @@ The [`supplementary-material`](supplementary-material/) directory contains Suppl
 - Workplace videos are not included because they contain potentially identifiable images of workers.
 - Numeric video and session identifiers are study identifiers rather than worker names.
 - The released code covers the principal offline video, spatial, propulsion, and VR-record analyses. It does not include the complete Unity project used to implement the VR prototype.
+- Needle-contact fields retained for compatibility with prototype JSON records are diagnostic counters, not reported paper indicators or validated safety measures.
+

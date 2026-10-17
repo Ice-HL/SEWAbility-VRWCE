@@ -1,6 +1,6 @@
 # VR-WCE outcome analysis
 
-This directory contains the study-specific offline analysis used to derive the four VR-WCE outcome domains from four pseudonymized technical sessions (`S1`, `S2`, `U1`, and `U2`). The script reads the JSON files written by the prototype, applies the prespecified action-population rules, writes action- and session-level tables, and optionally renders the descriptive four-domain figure.
+This directory contains the study-specific offline analysis used to derive the four VR-WCE work-performance domains from four pseudonymized technical sessions (`S1`, `S2`, `U1`, and `U2`). S1 and S2 were program-generated; U1 and U2 were researcher-operated. The script reads the JSON files written by the prototype, applies the action-population rules below, writes action- and session-level tables, and optionally renders the descriptive four-domain figure.
 
 ## Files
 
@@ -55,6 +55,11 @@ The principal fields consumed by the analysis are listed below. Three-dimensiona
 
 Additional fields may be present and are ignored unless referenced by the script.
 
+The `needleSafetyEvents` input field and needle-event diagnostic counters are
+retained for compatibility with existing prototype records. Needle-contact
+events are not reported paper indicators and are not measures of validated
+occupational safety.
+
 ## Analysis populations
 
 The code keeps runtime task progression separate from offline movement eligibility:
@@ -72,10 +77,16 @@ The script produces measures in the four manuscript domains:
 
 - **Work quantity:** runtime-recorded P2 action count, bilateral-classified action count, and bilateral participation rate.
 - **Work speed:** P1-P3 recorded activity spans, P2 action frequency, bilateral action duration, and non-bridged inter-action gap.
-- **Movement-related accuracy:** transfer path efficiency and attempts; P2 path efficiency, bilateral directional consistency, bilateral path-length difference, signed forward displacement, lateral excursion, hand-separation error, hand-specific and bilateral guidance adherence, and needle-contact events.
+- **Movement-related accuracy:** transfer path efficiency and attempts; P2 path efficiency, bilateral directional consistency, bilateral path-length difference, signed forward displacement, lateral excursion, hand-separation error, and hand-specific and bilateral guidance adherence.
 - **Work stability:** between-action SD/CV summaries and within-action speed variability, acceleration RMS, jerk RMS, and direction-change rate.
 
 Time-normalized bilateral-midpoint lateral profiles are also generated for descriptive visualization; they are not scored outcomes.
+
+Movement-related accuracy addresses the movement-related part of work quality.
+The prototype does not assess stitch quality, finished-product quality, or
+overall occupational work quality. Needle-event counters may remain in the
+machine-readable outputs as diagnostics but are excluded from the four-domain
+paper indicator list. Figure 5 is unchanged by this documentation update.
 
 ## Run
 
@@ -106,4 +117,9 @@ The output directory contains:
 - `Fig5_VRWCE_technical_sessions.{svg,pdf,png,tiff}` unless `--skip-figures` is used
 - `VRWCE_higher_order_stability.{svg,pdf,png}` unless `--skip-figures` is used
 
-The analyses are descriptive technical demonstrations. They do not produce a composite work-capacity score, a clinical diagnosis, or an employment-decision threshold.
+The analyses are descriptive technical demonstrations, not a validation study.
+They do not establish reliability, validity, clinical utility, health benefits,
+or safety performance, and do not produce a composite work-capacity score, a
+clinical diagnosis, or an employment-decision threshold. Further validation is
+required before these indicators can support work-capacity decisions.
+
