@@ -158,6 +158,7 @@ def load_data():
 
 
 def map_segments_to_cycles(seg_df, cycle_df):
+    """Assign segment midpoints to half-open [cycle start, cycle end) intervals."""
     mapped_rows = []
 
     video_ids = sorted(cycle_df["Video_ID"].unique(), key=video_order_key)
@@ -185,7 +186,7 @@ def map_segments_to_cycles(seg_df, cycle_df):
 
             mask = (
                 (seg_v["Segment_Center_Frame"] >= c_start) &
-                (seg_v["Segment_Center_Frame"] <= c_end)
+                (seg_v["Segment_Center_Frame"] < c_end)
             )
 
             seg_c = seg_v[mask].copy()

@@ -17,7 +17,8 @@ identifiable images of workers.
    trains the study-specific random-forest boundary detector from de-identified
    manual frame annotations and generates candidate work-cycle intervals.
 4. `04_extract_segment_level_88_features.py`
-   extracts overlapping 1-s motion windows at a 0.5-s step from the videos.
+   extracts overlapping nominal 1-s motion windows at a nominal 0.5-s step,
+   rounded to whole numbers of frames.
 5. `05_cluster_segment_level_features.py`
    evaluates K-means solutions for the segment-level Raw88, PCA90, and PCA95
    representations.
@@ -64,7 +65,9 @@ python 02_cluster_video_level_features.py \
 ```
 
 Outputs include assignments for every K, silhouette-score summaries, PCA
-variance summaries, and descriptive two-dimensional PCA plots.
+variance summaries, and descriptive two-dimensional PCA plots. In the summary,
+`Assignment_File` is relative to the supplied output directory, preserving the
+representation subdirectory without recording the researcher's local directory.
 
 ### 03 — candidate work-cycle boundaries
 
@@ -78,8 +81,8 @@ Inputs:
 
 ```json
 {
-  "V001": [1250, 2480],
-  "V002": [930, 2010, 3150]
+  "1": [1250, 2480],
+  "2": [930, 2010, 3150]
 }
 ```
 
@@ -102,7 +105,9 @@ reported in the manuscript.
 
 Inputs are the de-identified MP4 directory and the video-level CSV from script
 01 (used for its `Video` and `FPS` columns). The script uses MediaPipe Pose and
-the study's fixed 1-s window and 0.5-s step.
+rounds the nominal 1-s window and 0.5-s step to whole frame counts. Supplied
+sampling rates must correspond to the input records; this script does not
+independently validate source-frame timestamps.
 
 ```bash
 python 04_extract_segment_level_88_features.py \
@@ -135,7 +140,10 @@ python 06_map_segment_clusters_to_work_cycles.py \
 ```
 
 The script assigns a segment to a cycle using its center frame, then summarizes
-cluster occupancy across the normalized 0–100% work-cycle timeline.
+cluster occupancy across the normalized 0–100% work-cycle timeline. Cycle
+intervals include their start frame and exclude their end frame:
+`start <= segment_center < end`. A center at a shared boundary therefore belongs
+only to the later cycle.
 
 ## Important feature-definition distinction
 

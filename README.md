@@ -1,77 +1,73 @@
 # SEWAbility-VRWCE
 
-This repository accompanies a study that translated observed sewing-work demands into an executable and measurable virtual-reality work-capacity evaluation (VR-WCE) prototype.
+Core offline analysis code and supplementary materials for the video-informed
+VR work-capacity evaluation study. The code is organized by analysis stage,
+not as one drawing script per manuscript figure.
 
-It contains the study-specific code implementing the principal offline analytical steps and the supplementary materials cited in the manuscript. The earlier SEWAbility framework is available separately at [Ice-HL/SEWAbility](https://github.com/Ice-HL/SEWAbility).
+## Analysis modules
 
-## Five evidence-to-VR mappings
+| Module | Main outputs |
+| --- | --- |
+| [01_video_analysis](analysis-code/01_video_analysis/) | Video/window motion features, clustering, candidate cycle boundaries, and cluster-to-cycle mapping |
+| [02_spatial_analysis](analysis-code/02_spatial_analysis/) | Cycle-balanced wrist-use densities and highest-density regions |
+| [03_propulsion_analysis](analysis-code/03_propulsion_analysis/) | Automatic kinematic candidates, cycle-level directions, and propulsion summaries |
+| [04_vr_outcome_analysis](analysis-code/04_vr_outcome_analysis/) | Work speed, quantity, movement-related accuracy, and stability from session records |
 
-The study links real-work evidence and assessment guidance to VR task specifications through five paired mappings:
-
-| Mapping | Evidence or guidance | VR specification or output |
-|---|---|---|
-| Exemplar task | Workplace-video motion analysis and source-video review | An assessment task based on the operations of zipper sewing (Task A), without reproducing every product detail |
-| Task sequence | Recurrent work cycles and their functional phases | Ordered preparation, propulsion, and return states with phase-completion events |
-| Functional workspace | Cycle-balanced two-dimensional wrist-use distributions, movement pathways, and workstation context | Floor-level material exchange, tabletop placement, and a needle-adjacent propulsion site |
-| Workload and propulsion | Cycle-level candidate counts and observed propulsion characteristics | Bounded workload and hand-specific guidance parameters; timing and speed retained as non-mandatory comparison references |
-| Outcome measurement | Work-performance constructs informed by Hong Kong Labour Department productivity-assessment guidance | Indicators of work speed, work quantity, movement-related accuracy, and work stability derived from VR records |
-
-Spatial mapping preserves functional relationships rather than reconstructing metrically calibrated three-dimensional geometry from video. The floor-level region also requires on-site and factory context because it is outside the video field of view. Global task sites and local hand-guidance cues are specified separately.
-
-The prototype was examined in four preliminary technical sessions: two program-generated and two researcher-operated. These sessions demonstrated task execution, structured recording, and indicator derivation. This is a technical proof of concept; it does not establish reliability, validity, clinical utility, health benefits, safety performance, or work-capacity decision thresholds.
-
-## Repository structure
-
-```text
-SEWAbility-VRWCE/
-├── README.md
-├── analysis-code/
-└── supplementary-material/
-```
-
-### Analysis code
-
-The principal offline computations are organized into four modules supporting these mappings. The modules are not a one-to-one implementation of all five mappings; source-video interpretation, contextual design decisions, and the complete Unity implementation are outside their scope.
-
-1. [`01_video_analysis`](analysis-code/01_video_analysis/) — video-level motion features, K-means/PCA sensitivity analyses, candidate work-cycle detection, 1-s window analysis, and temporal mapping of motion clusters.
-2. [`02_spatial_analysis`](analysis-code/02_spatial_analysis/) — retained-cohort inputs and cycle-balanced wrist-distribution/HDR analysis.
-3. [`03_propulsion_analysis`](analysis-code/03_propulsion_analysis/) — automatic bilateral-forward kinematic candidates, cycle-level direction estimates, circular summaries, video-clustered bootstrap analysis, and propulsion-parameter aggregation.
-4. [`04_vr_outcome_analysis`](analysis-code/04_vr_outcome_analysis/) — phase-specific JSON processing, action classification, and derivation of the four VR-WCE outcome domains.
-
-Install the Python dependencies with:
+Install dependencies and follow the input specifications and commands in each
+module's README:
 
 ```bash
 python -m pip install -r analysis-code/requirements.txt
 ```
 
-Each module contains its own README describing its inputs, outputs, execution order, assumptions, and interpretation boundary.
+The VR module can export numerical results without loading its optional
+Matplotlib drawing code by using `--skip-figures`. Its optional descriptive
+plots are not a pixel-identical reconstruction of the final manuscript layout.
+The release does not supply a complete set of final figure-layout scripts.
 
-### Spatial-method revision and validation records
+## Inputs and scope
 
-The current spatial analysis evaluates 30 shared isotropic bandwidth candidates from 0.01 to 0.30 shoulder-width units (SW), in 0.01-SW steps. It selects the highest leave-one-video-out mean log score, weighting the six phase–hand groups equally; an exact tie is resolved by the smallest bandwidth. The selected 0.04 SW is a result of this procedure, not a fixed input. Supplementary Table S19 displays the ten candidates from 0.01 to 0.10 SW; the [spatial validation records](analysis-code/02_spatial_analysis/validation/) retain the full search and the extended-range check.
+Inputs include pose-trajectory CSVs, per-video sampling-rate records, cycle and
+phase annotations, and phase-specific VR JSON files. Use numeric or pseudonymous
+video/session identifiers. Sampling-rate values must match the trajectory
+records supplied to an analysis; the feature scripts do not independently
+validate the source video's frame timestamps.
 
-Both the candidate grid and the selection rule have been revised from the earlier repository implementation, which used eight candidates and a paired one-standard-error preference. The earlier implementation remains in Git history. The [spatial README](analysis-code/02_spatial_analysis/README.md) and validation records explain the change; it is not presented as a preregistered procedure.
+Source-video interpretation, final manual quality-control decisions, and the
+complete Unity project are outside this release. The spatial and propulsion
+modules start from the retained-cohort inputs documented in Supplementary Table
+S19. Identifiable workplace videos are not included. Consequently, code
+availability does not imply that all private inputs are publicly downloadable.
 
-## Input formats
+## Spatial method and verification
 
-The scripts operate on de-identified numerical records rather than worker names. Required input classes include:
+The current shared bandwidth search evaluates 0.01–0.30 SW in 0.01-SW steps and
+selects the highest mean leave-one-video-out log score, with equal weights for
+the six phase–hand groups. Exact ties use the smallest bandwidth. The manuscript
+dataset selects 0.04 SW; S19 displays the first ten candidates. The
+[spatial README](analysis-code/02_spatial_analysis/) and
+[validation records](analysis-code/02_spatial_analysis/validation/) retain the
+full search and explain the revision from the earlier paired-one-standard-error
+rule. Neither version is described as preregistered.
 
-- pose-trajectory CSV files with frame/time fields and two-dimensional upper-extremity key points;
-- an 88-feature table indexed by numeric video identifier;
-- candidate-cycle and adjudicated phase-interval tables indexed by numeric video and cycle identifiers;
-- phase-labelled wrist-trajectory and propulsion-event tables;
-- phase-specific VR JSON records containing timestamps, event counts, hand-use classifications, and wrist-proxy positions.
+Run the focused code checks from the repository root:
 
-Exact required fields are documented in the README and command-line help for each module. Paths are supplied as command-line arguments; no local usernames or computer-specific directories are embedded in the released code.
+```bash
+python -m unittest discover -s tests -v
+```
 
-## Supplementary material
+Tests check computational behavior, not clinical or employment validity.
+Needle-event fields retained for JSON compatibility are diagnostics, not reported
+paper outcomes or validated safety measures.
 
-The [`supplementary-material`](supplementary-material/) directory contains Supplementary Tables S1–S19 and Supplementary Figures S1–S3, with an [ordered index](supplementary-material/README.md) describing each file. Their numbering matches the accompanying manuscript. Operational definitions, real-work reference values, and VR uses of propulsion characteristics are provided together in Table 1 of the main manuscript.
+## Supplementary material and privacy
 
-## Data and privacy notes
+[Supplementary material](supplementary-material/) contains Tables S1–S19 and
+Figures S1–S3, with an [ordered index](supplementary-material/README.md).
 
-- Workplace videos are not included because they contain potentially identifiable images of workers.
-- Numeric video and session identifiers are study identifiers rather than worker names.
-- The released code covers the principal offline video, spatial, propulsion, and VR-record analyses. It does not include the complete Unity project used to implement the VR prototype.
-- Needle-contact fields retained for compatibility with prototype JSON records are diagnostic counters, not reported paper indicators or validated safety measures.
-
+Paths are provided at runtime rather than hard-coded to a researcher's machine.
+Examples use project-relative paths. Local console messages may display the
+paths supplied by the person running a script; review new logs and generated
+files before publishing them. Do not commit private video/session files or
+identifying filenames. Full figure-reproduction working files and local audit
+reports are not part of this public code release.

@@ -108,9 +108,9 @@ parameters are described in Table 1 and in `03_propulsion_analysis`.
 
 ```bash
 python cycle_balanced_wrist_regions.py \
-  --trajectories /path/to/phase_labelled_wrist_trajectories_210.csv \
-  --cycle-audit /path/to/cycle_and_phase_sample_audit_210.csv \
-  --output-dir /path/to/spatial_outputs
+  --trajectories data/phase_labelled_wrist_trajectories_210.csv \
+  --cycle-audit data/cycle_and_phase_sample_audit_210.csv \
+  --output-dir results/spatial
 ```
 
 No personal names or local computer paths are embedded in the script.

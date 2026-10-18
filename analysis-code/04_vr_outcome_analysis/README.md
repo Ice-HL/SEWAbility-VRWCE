@@ -4,11 +4,12 @@ This directory contains the study-specific offline analysis used to derive the f
 
 ## Files
 
-- `analyze_vrwce_sessions.py`: numerical derivation, quality checks, and descriptive plotting.
+- `analyze_vrwce_sessions.py`: numerical derivation and quality checks, with the existing command-line interface.
+- `plot_vrwce_outputs.py`: optional basic descriptive plots, loaded only when figures are requested.
 
 The original Unity project and its C# runtime-logging source are **not** included in this repository. This directory begins at the offline JSON-analysis stage; it does not recreate the executable VR task or generate the source JSON records.
 
-The script requires Python 3.10 or later, NumPy, and Matplotlib. Install the shared dependencies listed for the repository before running it.
+Numerical analysis requires Python 3.10 or later and NumPy. Matplotlib is needed only for optional plotting; a `--skip-figures` run does not import it. Install the shared dependencies listed for the repository, or the numerical-only dependencies appropriate to your use.
 
 ## Expected input layout
 
@@ -86,22 +87,30 @@ Movement-related accuracy addresses the movement-related part of work quality.
 The prototype does not assess stitch quality, finished-product quality, or
 overall occupational work quality. Needle-event counters may remain in the
 machine-readable outputs as diagnostics but are excluded from the four-domain
-paper indicator list. Figure 5 is unchanged by this documentation update.
+paper indicator list.
 
 ## Run
 
-From this directory, supply one mapping for each pseudonymous session:
+From this directory, supply one mapping for each pseudonymous session. For
+numerical outputs only (recommended for analysis):
 
 ```bash
 python analyze_vrwce_sessions.py \
-  --session S1=/path/to/session_01 \
-  --session S2=/path/to/session_02 \
-  --session U1=/path/to/session_03 \
-  --session U2=/path/to/session_04 \
-  --output-dir results
+  --session S1=sessions/session_01 \
+  --session S2=sessions/session_02 \
+  --session U1=sessions/session_03 \
+  --session U2=sessions/session_04 \
+  --output-dir results \
+  --skip-figures
 ```
 
-Optional `--profile LABEL=TEXT` arguments change display labels without changing calculations. Use `--skip-figures` to produce numerical outputs only. Run `python analyze_vrwce_sessions.py --help` for all options.
+Optional `--profile LABEL=TEXT` arguments change display labels without changing
+calculations. Run `python analyze_vrwce_sessions.py --help` for all options.
+
+Omit `--skip-figures` to also render the existing basic descriptive plots. This
+preserves the previous default behavior. The plotting module is **not the
+separately refined submission-version Figure 5 layout**; it does not change
+the underlying outcome calculations.
 
 ## Outputs
 

@@ -48,6 +48,11 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 # =========================================================
 # Helper functions
 # =========================================================
+def relative_output_path(path, output_root):
+    """Keep exported artifact references portable within the output tree."""
+    return os.path.relpath(path, output_root).replace(os.sep, "/")
+
+
 def draw_confidence_ellipse(points, ax, n_std=2.0, facecolor='none', **kwargs):
     if points.shape[0] < 2:
         return
@@ -104,7 +109,7 @@ def evaluate_setting(setting_name, X_for_clustering, X_2d_vis, df_original, vide
             "K": k,
             "Silhouette_Score": sil,
             "Cluster_Sizes": ",".join(map(str, cluster_sizes.tolist())),
-            "Assignment_File": out_csv
+            "Assignment_File": relative_output_path(out_csv, OUTPUT_DIR)
         })
 
     summary_df = pd.DataFrame(summary_rows)

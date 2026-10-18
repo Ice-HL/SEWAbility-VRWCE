@@ -7,7 +7,7 @@ propulsion characteristics reported for the retained Task A cohort.
    candidate intervals inside the retained P2 intervals and merges adjacent
    cores only when neither wrist shows meaningful return movement.
 2. `summarize_propulsion_characteristics.py` estimates cycle-level propulsion
-   direction and derives movement geometry, duration, true inter-action gap,
+   direction and derives movement geometry, duration, within-cycle inter-event gap,
    bilateral wrist separation, and wrist-midpoint path speed.
 
 ## Terminology and validation boundary
@@ -55,15 +55,15 @@ width for normalization.
 
 ```bash
 python detect_automatic_kinematic_candidates.py \
-  --phase-intervals /path/to/phase_intervals_210.csv \
-  --trajectory-dir /path/to/trajectory_csvs \
-  --output-dir /path/to/candidate_outputs
+  --phase-intervals data/phase_intervals_210.csv \
+  --trajectory-dir data/trajectory_csvs \
+  --output-dir results/candidates
 
 python summarize_propulsion_characteristics.py \
-  --candidates /path/to/candidate_outputs/automatic_kinematic_candidates.csv \
-  --cycle-counts /path/to/candidate_outputs/candidate_counts_by_cycle.csv \
-  --trajectory-dir /path/to/trajectory_csvs \
-  --output-dir /path/to/propulsion_outputs
+  --candidates results/candidates/automatic_kinematic_candidates.csv \
+  --cycle-counts results/candidates/candidate_counts_by_cycle.csv \
+  --trajectory-dir data/trajectory_csvs \
+  --output-dir results/propulsion
 ```
 
 ## Aggregation rules made explicit
@@ -75,7 +75,7 @@ python summarize_propulsion_characteristics.py \
 - Axial displacement (`D`) and lateral excursion (`W`) are summarized by first
   taking the median across candidates within each cycle and then the P90 across
   the 210 cycle-level medians.
-- Inter-action gap is the next candidate onset minus the preceding candidate
+- Inter-event gap is the next candidate onset minus the preceding candidate
   end within the same cycle. It is not an onset-to-onset interval. For 4,916
   candidates nested in 210 cycles, this yields 4,706 adjacent-candidate pairs.
 - Wrist separation, duration, and path speed use pooled candidate-level
